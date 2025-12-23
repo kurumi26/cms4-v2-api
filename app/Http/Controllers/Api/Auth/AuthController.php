@@ -1,37 +1,38 @@
 <?php
+
 namespace App\Http\Controllers\Api\Auth;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Repositories\Auth\AuthRepository;
-use App\Http\Resources\Auth\LoginResource;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use App\Http\Resources\Auth\LoginResource;
 
 class AuthController extends Controller
 {
-    public $authRepository;
-    public function __construct(AuthRepository $authRepository) {
-        $this->authRepository = $authRepository;
-    }
-
     public function login(Request $request)
     {
-        $validated = $request->validate([
+        $credentials = $request->validate([
             'email'    => ['required', 'email'],
             'password' => ['required'],
         ]);
 
-        $user = $this->authRepository->login($validated);
-
-        if (! $user) {
+        if (! Auth::attempt($credentials)) {
             throw ValidationException::withMessages([
                 'email' => ['Invalid credentials.'],
             ]);
         }
 
-        $token       = $user->createToken('api-token')->plainTextToken;
-        $user->token = $token;
+        $user = auth()->user();
 
-        return new LoginResource($user);
+        // 🔥 IMPORTANT: create token
+        $user->tokens()->delete(); // optional: revoke old tokens
+
+        $token = $user->createToken('cms-admin')->plainTextToken;
+
+        return response()->json([
+            'token' => $token,
+            'user'  => new LoginResource($user),
+        ]);
     }
 }

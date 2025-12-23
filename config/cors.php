@@ -1,13 +1,21 @@
 <?php
 
 return [
-    'paths' => ['api/*', 'sanctum/csrf-cookie', 'login', 'logout'],
-    'allowed_methods' => ['*'],  // Allow all HTTP methods
-    'allowed_origins' => ['http://localhost:3000'],
-    'allowed_origins_patterns' => [],
-    'allowed_headers' => ['*'],  // Allow all headers
-    'exposed_headers' => [],  // Add headers that need to be exposed (optional)
-    'max_age' => 0,
-    'supports_credentials' => true,  // Allow cookies to be sent with requests
-];
+    'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
+    'allowed_methods' => ['*'],
+
+    'allowed_origins' => [
+        env('CORS_ALLOWED_ORIGIN', 'https://cms4-nextjs.vercel.app'),
+    ],
+
+    'allowed_origins_patterns' => [],
+
+    'allowed_headers' => ['*'],
+
+    'exposed_headers' => [],
+
+    'max_age' => 0,
+
+    'supports_credentials' => true,
+];
