@@ -18,7 +18,7 @@ class PageController extends Controller
             'parent_page_id'    => 'nullable|exists:pages,id',
             'album_id'          => 'nullable|exists:albums,id',
             'contents'          => 'nullable|string',
-            'status'            => 'required|in:public,private,draft',
+            'status'            => 'required|in:published,private,draft',
             'meta_title'        => 'nullable|string|max:255',
             'meta_description'  => 'nullable|string',
             'meta_keyword'      => 'nullable|string',
@@ -49,12 +49,14 @@ class PageController extends Controller
 
     public function index(Request $request)
     {
+        $perPage = $request->integer('per_page', 10);
+
         $pages = Page::query()
             ->when($request->search, function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%');
             })
-            ->latest()
-            ->paginate(10);
+            ->latest('updated_at')
+            ->paginate($perPage);
 
         return PageResource::collection($pages);
     }
@@ -67,6 +69,7 @@ class PageController extends Controller
             'id' => $page->id,
             'name' => $page->name,
             'label' => $page->label,
+            'album_id' => $page->album_id, // ✅ ADD THIS
             'contents' => $page->contents,
             'status' => $page->status,
             'meta_title' => $page->meta_title,
@@ -82,8 +85,9 @@ class PageController extends Controller
         $validated = $request->validate([
             'name' => 'required|string',
             'label' => 'nullable|string',
+            'album_id' => 'nullable',
             'contents' => 'required|string',
-            'status' => 'required|in:public,private',
+            'status' => 'required|in:published,private',
             'meta_title' => 'nullable|string',
             'meta_description' => 'nullable|string',
             'meta_keyword' => 'nullable|string',
@@ -93,6 +97,16 @@ class PageController extends Controller
 
         return response()->json([
             'message' => 'Page updated successfully',
+        ]);
+    }
+
+    public function pages_menu()
+    {
+        return response()->json([
+            'data' => Page::select('id', 'name', 'label')
+                ->where('status', 'published')
+                ->orderBy('id')
+                ->get()
         ]);
     }
 }

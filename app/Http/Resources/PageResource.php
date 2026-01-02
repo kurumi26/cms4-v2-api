@@ -13,7 +13,7 @@ class PageResource extends JsonResource
             'id'           => $this->id,
             'label'        => $this->label ?? $this->name,
             'slug'         => $this->slug,
-            'url'          => url($this->slug), // ✅ full frontend URL
+            'url'          => url($this->slug),
             'visibility'   => ucfirst($this->status),
             'lastModified' => $this->updated_at?->format('M d, Y g:i A'),
         ];

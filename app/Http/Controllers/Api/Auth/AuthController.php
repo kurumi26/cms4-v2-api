@@ -24,9 +24,7 @@ class AuthController extends Controller
         }
 
         $user = auth()->user();
-
-        // 🔥 IMPORTANT: create token
-        $user->tokens()->delete(); // optional: revoke old tokens
+        $user->tokens()->delete();
 
         $token = $user->createToken('cms-admin')->plainTextToken;
 
