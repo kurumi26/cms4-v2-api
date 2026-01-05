@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Alexusmai\LaravelFileManager\Controllers\FileManagerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,4 +20,12 @@ Route::get('/', function () {
 
 Route::get('/admin/file-manager-ui', function () {
     return view('admin.file-manager');
+});
+
+Route::group([
+    'prefix' => 'file-manager',
+], function () {
+    Route::get('/', [FileManagerController::class, 'index']);
+    Route::any('/{any}', [FileManagerController::class, 'handle'])
+        ->where('any', '.*');
 });
