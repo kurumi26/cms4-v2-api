@@ -8,7 +8,6 @@
 
 @section('content')
     <div class="container-fluid py-3">
-        <h5 class="mb-3">Media Library</h5>
 
         <!-- File Manager App -->
         <div id="fm" style="height: 600px;"></div>

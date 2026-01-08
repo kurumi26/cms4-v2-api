@@ -2,15 +2,17 @@
 
 namespace App\Models;
 
+use OwenIt\Auditing\Auditable;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use OwenIt\Auditing\Contracts\Auditable as AuditableContract;
 
-class User extends Authenticatable
+class User extends Authenticatable implements AuditableContract
 {
-    use HasApiTokens, HasFactory, Notifiable, HasRoles;
+    use HasApiTokens, HasFactory, Notifiable, HasRoles, Auditable;
 
     protected $guard_name = 'sanctum';
 
@@ -52,6 +54,11 @@ class User extends Authenticatable
     public function getFullNameAttribute(): string
     {
         return trim("{$this->fname} {$this->mname} {$this->lname}");
+    }
+
+    public function socialMediaAccounts()
+    {
+        return $this->hasMany(SocialMediaAccount::class);
     }
 
 }

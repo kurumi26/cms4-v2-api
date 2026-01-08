@@ -24,7 +24,8 @@ class DatabaseSeeder extends Seeder
             AlbumSeeder::class,
             OptionSeeder::class,
             PageSeeder::class,
-            MenuSeeder::class
+            MenuSeeder::class,
+            SettingSeeder::class,
         ]);
     }
 }

@@ -8,10 +8,12 @@ use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\AlbumController;
 use App\Http\Controllers\Api\OptionController;
+use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\ArticleController;
 use App\Http\Controllers\Api\Auth\AuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\Page\PageController;
+use App\Http\Controllers\Api\AuditTrailController;
 use App\Http\Controllers\Api\FileManagerController;
 use App\Http\Controllers\Api\ArticleCategoryController;
 use App\Http\Controllers\Api\Page\PublicPageController;
@@ -19,7 +21,10 @@ use App\Http\Controllers\Api\Page\PublicPageController;
 
 Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/user', function (Request $request) {   return $request->user();    });
+    Route::get('/user', [AccountController::class, 'me']);
+    Route::post('/user/profile', [AccountController::class, 'updateProfile']);
+    Route::put('/user/email', [AccountController::class, 'updateEmail']);
+    Route::put('/user/password', [AccountController::class, 'updatePassword']);
     
     // dashboard
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
@@ -68,6 +73,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/users', [UserController::class, 'index']);
     Route::get('/users/{user}', [UserController::class, 'show']);
     Route::put('/users/{user}', [UserController::class, 'update']);
+
+    // audit
+    Route::get('/audit-trails', [AuditTrailController::class, 'index']);
 });
 
 //public
