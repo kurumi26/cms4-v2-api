@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Controller;
+use App\Models\Page;
 use App\Models\Setting;
 use App\Models\SocialMediaAccount;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use App\Http\Controllers\Controller;
 
 class WebsiteSettingController extends Controller
 {
@@ -20,8 +22,11 @@ class WebsiteSettingController extends Controller
     ========================= */
     public function show()
     {
+        $dataPrivacy = Page::where('slug', 'data-privacy')->firstOrFail();
+
         return response()->json([
             'setting' => $this->setting(),
+            'data_privacy' => $dataPrivacy,
         ]);
     }
 
@@ -94,21 +99,34 @@ class WebsiteSettingController extends Controller
     /* =========================
        DATA PRIVACY TAB
     ========================= */
+
     public function updatePrivacy(Request $request)
     {
         $request->validate([
-            'data_privacy_title' => 'required',
-            'data_privacy_popup_content' => 'required',
-            'data_privacy_content' => 'required',
+            'data_privacy_title' => 'required|string',
+            'data_privacy_popup_content' => 'required|string',
+            'data_privacy_content' => 'required|string',
         ]);
 
-        $this->setting()->update($request->only([
-            'data_privacy_title',
-            'data_privacy_popup_content',
-            'data_privacy_content',
-        ]));
+        DB::transaction(function () use ($request) {
 
-        return response()->json(['message' => 'Data privacy updated']);
+            $this->setting()->update($request->only([
+                'data_privacy_title',
+                'data_privacy_popup_content',
+                'data_privacy_content',
+            ]));
+
+            $dataPrivacy = Page::where('slug', 'data-privacy')->firstOrFail();
+
+            $dataPrivacy->update([
+                "name" => $request->data_privacy_title,
+                "contents" => $request->data_privacy_content,
+            ]);
+        });
+
+        return response()->json([
+            'message' => 'Data privacy updated successfully'
+        ], 200);
     }
 
     /* =========================
