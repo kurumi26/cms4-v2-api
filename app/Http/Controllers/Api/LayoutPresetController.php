@@ -9,9 +9,25 @@ use Illuminate\Support\Facades\Storage;
 
 class LayoutPresetController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return LayoutPreset::orderByDesc('created_at')->get();
+        $query = LayoutPreset::query();
+
+        // Search
+        if ($request->filled('search')) {
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                ->orWhere('category', 'like', "%{$search}%");
+            });
+        }
+
+        $query->orderByDesc('created_at');
+
+        $perPage = $request->per_page ?? 10;
+
+        return $query->paginate($perPage);
     }
 
     public function store(Request $request)
