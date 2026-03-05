@@ -150,7 +150,7 @@ class PageController extends Controller
         ]);
 
         if (array_key_exists('name', $validated)) {
-            $validated['slug'] = Str::slug($validated['name']);
+            $validated['slug'] = $this->uniqueSlug(Str::slug($validated['name']), $page->id);
         }
 
         // Parse grapes_payload into fields when update payload uses grapes export
@@ -168,6 +168,22 @@ class PageController extends Controller
         return response()->json([
             'message' => 'Page updated successfully',
         ]);
+    }
+
+    private function uniqueSlug(string $base, ?int $ignoreId = null): string
+    {
+        $slug = $base ?: 'page';
+        $i = 2;
+
+        while (Page::where('slug', $slug)
+            ->when(!is_null($ignoreId), function ($q) use ($ignoreId) {
+                $q->where('id', '!=', $ignoreId);
+            })->exists()) {
+            $slug = $base . '-' . $i;
+            $i++;
+        }
+
+        return $slug;
     }
 
     public function pages_menu()
