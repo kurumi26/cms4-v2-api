@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Role;
@@ -84,14 +85,31 @@ class UserController extends Controller
 
     public function show(User $user)
     {
+        $activityLogs = DB::table('audits')
+            ->where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(fn($audit) => [
+                'id'             => $audit->id,
+                'event'          => $audit->event,
+                'auditable_type' => class_basename($audit->auditable_type),
+                'auditable_id'   => $audit->auditable_id,
+                'old_values'     => json_decode($audit->old_values, true),
+                'new_values'     => json_decode($audit->new_values, true),
+                'ip_address'     => $audit->ip_address,
+                'user_agent'     => $audit->user_agent,
+                'created_at'     => $audit->created_at,
+            ]);
+
         return response()->json([
             'data' => [
-                'id' => $user->id,
-                'fname' => $user->fname,
-                'lname' => $user->lname,
-                'email' => $user->email,
-                'role' => $user->getRoleNames()->first(),
+                'id'        => $user->id,
+                'fname'     => $user->fname,
+                'lname'     => $user->lname,
+                'email'     => $user->email,
+                'role'      => $user->getRoleNames()->first(),
                 'is_active' => $user->is_active,
+                'audits'    => $activityLogs,
             ],
         ]);
     }

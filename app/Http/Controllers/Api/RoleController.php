@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Role;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class RoleController extends Controller
 {
@@ -54,5 +55,26 @@ class RoleController extends Controller
             'message' => 'Role updated successfully',
             'role' => $role,
         ]);
+    }
+
+    public function destroy(Role $role)
+    {
+        if ($role->name === 'admin') {
+            return response()->json(['message' => 'Cannot delete administrator role'], 403);
+        }
+
+        $roleId = $role->id;
+
+        // Clean up pivot tables first
+        DB::table('role_has_permissions')->where('role_id', $roleId)->delete();
+        DB::table('model_has_roles')->where('role_id', $roleId)->delete();
+
+        // Bypass Eloquent events entirely — go straight to DB
+        DB::table('roles')->where('id', $roleId)->delete();
+
+        // Clear Spatie's permission cache manually
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+
+        return response()->json(['message' => 'Role deleted successfully']);
     }
 }
