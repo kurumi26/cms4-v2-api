@@ -14,6 +14,9 @@ class AlbumResource extends JsonResource
             'name'         => $this->name,
             'total_images' => $this->banners_count ?? 0,
             'updated_at'   => $this->updated_at ? $this->updated_at->format('M d, Y g:i A') : null,
+            'deleted_at'   => $this->deleted_at,
+            'is_deleted'   => ! is_null($this->deleted_at),
+            'visibility'   => $this->deleted_at ? 'Deleted' : null,
         ];
     }
 }

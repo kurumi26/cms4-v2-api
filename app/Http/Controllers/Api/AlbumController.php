@@ -40,7 +40,24 @@ class AlbumController extends Controller
     {
         $perPage = $request->per_page ?? 10;
 
-        $albums = Album::query()
+        $query = Album::query();
+
+        $onlyTrashed = $request->boolean('only_trashed')
+            || $request->boolean('onlyDeleted')
+            || $request->boolean('trashed')
+            || $request->boolean('show_deleted');
+
+        $withTrashed = $request->boolean('with_trashed')
+            || $request->boolean('withDeleted')
+            || $request->boolean('include_deleted');
+
+        if ($onlyTrashed) {
+            $query = $query->onlyTrashed();
+        } elseif ($withTrashed) {
+            $query = $query->withTrashed();
+        }
+
+        $albums = $query
             ->where('id', '!=', 1) // 🚫 exclude Home Banner
             ->withCount('banners')
             ->when($request->filled('search'), function ($q) use ($request) {
@@ -156,16 +173,6 @@ class AlbumController extends Controller
     public function destroy(Album $album)
     {
         return DB::transaction(function () use ($album) {
-            $banners = $album->banners()->get();
-
-            foreach ($banners as $banner) {
-                if ($banner->image_path && Storage::disk('public')->exists($banner->image_path)) {
-                    Storage::disk('public')->delete($banner->image_path);
-                }
-
-                $banner->delete();
-            }
-
             $album->delete();
 
             return response()->json(null, 204);
