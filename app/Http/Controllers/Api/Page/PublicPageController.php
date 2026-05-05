@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Page;
 use Str;
 use App\Models\Menu;
 use App\Models\Page;
+use App\Models\Option;
 use App\Models\Article;
 use Illuminate\Http\Request;
 use App\Models\ArticleCategory;
@@ -15,6 +16,28 @@ use Illuminate\Support\Facades\Storage;
 
 class PublicPageController extends Controller
 {
+    private function animationValue($id): ?string
+    {
+        if (empty($id)) {
+            return null;
+        }
+
+        $query = Option::where('type', 'animation');
+
+        if (is_numeric($id)) {
+            return (clone $query)->where('id', (int) $id)->value('value');
+        }
+
+        $value = trim((string) $id);
+
+        return (clone $query)
+            ->where(function ($q) use ($value) {
+                $q->where('value', $value)
+                    ->orWhere('name', $value);
+            })
+            ->value('value') ?: $value;
+    }
+
     public function show(string $slug)
     {
         $page = Page::with([
@@ -25,6 +48,9 @@ class PublicPageController extends Controller
             ->where('slug', $slug)
             ->where('status', 'published')
             ->firstOrFail();
+
+        $transitionInValue = $page->album ? $this->animationValue($page->album->transition_in) : null;
+        $transitionOutValue = $page->album ? $this->animationValue($page->album->transition_out) : null;
 
         return response()->json([
             'id'        => $page->id,
@@ -49,14 +75,25 @@ class PublicPageController extends Controller
                 'transition'     => $page->album->transition,
                 'transition_in'  => $page->album->transition_in,
                 'transition_out' => $page->album->transition_out,
+                'transition_in_value'  => $transitionInValue,
+                'transition_out_value' => $transitionOutValue,
                 'banners' => $page->album->banners->map(function ($banner) {
                     return [
                         'id'          => $banner->id,
                         'title'       => $banner->title,
+                        'title_font' => $banner->title_font ?? null,
+                        'title_font_size' => $banner->title_font_size ?? null,
+                        'title_bold' => $banner->title_bold ?? null,
                         'description' => $banner->description,
+                        'description_font' => $banner->description_font ?? null,
+                        'description_font_size' => $banner->description_font_size ?? null,
+                        'description_bold' => $banner->description_bold ?? null,
                         'alt'         => $banner->alt,
                         'image_url' => url(Storage::url($banner->image_path)),
                         'button_text' => $banner->button_text,
+                        'button_font' => $banner->button_font ?? null,
+                        'button_font_size' => $banner->button_font_size ?? null,
+                        'button_bold' => $banner->button_bold ?? null,
                         'url'         => $banner->url,
                         'order'       => $banner->order,
                     ];

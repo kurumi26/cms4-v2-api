@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\Album;
 use App\Models\Banner;
+use App\Models\Option;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,28 @@ use Illuminate\Support\Facades\Storage;
 
 class AlbumController extends Controller
 {
+    private function animationValue($id): ?string
+    {
+        if (empty($id)) {
+            return null;
+        }
+
+        $query = Option::where('type', 'animation');
+
+        if (is_numeric($id)) {
+            return (clone $query)->where('id', (int) $id)->value('value');
+        }
+
+        $value = trim((string) $id);
+
+        return (clone $query)
+            ->where(function ($q) use ($value) {
+                $q->where('value', $value)
+                    ->orWhere('name', $value);
+            })
+            ->value('value') ?: $value;
+    }
+
     public function index(Request $request)
     {
         $perPage = $request->per_page ?? 10;
@@ -43,8 +66,12 @@ class AlbumController extends Controller
 
     public function show(Album $album)
     {
+        $album->load('banners');
+        $album->setAttribute('transition_in_value', $this->animationValue($album->transition_in));
+        $album->setAttribute('transition_out_value', $this->animationValue($album->transition_out));
+
         return response()->json(
-            $album->load('banners')
+            $album
         );
     }
 
